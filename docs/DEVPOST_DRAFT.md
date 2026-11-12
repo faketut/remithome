@@ -3,7 +3,7 @@
 - **Project name:** RemitHome
 - **Tagline:** The $200 that actually pays the rent — earmarked remittances on Stellar.
 - **Devpost:** https://blockchain-stellar-ic.devpost.com
-- **Repo:** TBD — create public repo `faketut/remithome`, push this scaffold, paste URL here.
+- **Repo:** https://github.com/faketut/remithome — public, pushed Nov 11 (commit 22a2207, verified remote HEAD matches).
 - **Live demo URL:** TBD (deploy app or record local demo; testnet mode needs contract ID).
 - **Demo video URL (YouTube/Loom, ≤1 min of prototype):** TBD — record per `DEMO_SCRIPT.md`.
 - **Stellar Testnet contract ID:** TBD — deploy per `scripts/deploy-testnet.sh`, paste ID + Explorer link.
