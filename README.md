@@ -1,5 +1,9 @@
 # RemitHome — the $200 that actually pays the rent
 
+[![RemitHome demo — $200 sent, $198 delivered (60s)](scripts/record/videos/remithome-demo-60s.gif)](scripts/record/videos/remithome-demo-60s.mp4)
+
+*60-second demo, live on Stellar Testnet: $200 locked in escrow, split into Rent $100 / School $60 / Food $40, all released — then a wrong pickup code, a double release, and an expired-envelope refund, all rejected by the contract. Click the clip for the [full video (mp4, 60s, 720p)](scripts/record/videos/remithome-demo-60s.mp4).*
+
 Stellar Blockchain Innovation Challenge (Velocity × Stellar Development Foundation), Nov 2–18, 2026.
 Topic: **Payments: Cross-Border Remittances, Transnational Households, and the Last Mile.**
 Public repo: https://github.com/faketut/remithome
@@ -21,7 +25,7 @@ Public repo: https://github.com/faketut/remithome
 - [x] App wired to testnet end-to-end (Nov 11 ~23:30 UTC): sender → escrow → release → receipt through the app's own API routes, remittance #1 fully released on-chain (create `71321447…`, school `72f5ce9a…`, food `5cbe349a…`, rent `3b2c09b1…`); wrong-code and double-release attacks both rejected by the contract. Balances verified: school 60 / landlord 100 / agent 40 USDC. 200 USDC unallocated remains in the contract (covers the next create). See `scripts/DEPLOYMENT.md` for the gotchas (JS SDK v13 meta-parse bug, Friendbot `&asset=` delivers no USDC, payee trustlines required).
 - [ ] App wired to testnet (sender → escrow → release → receipt, end to end)
 - [ ] Devpost project created + Showcase Form submitted — **due Fri Nov 13, 08:30 EST**
-- [ ] 1-minute demo video (real prototype on screen, not slides)
+- [x] 1-minute demo video (real prototype on screen, not slides) — [60s clip at the top of this README](scripts/record/videos/remithome-demo-60s.mp4) (GIF plays inline; full mp4 linked)
 - [ ] User validation: 3–5 sender interviews — `docs/USER_VALIDATION.md`
 - [ ] Showcase Mon Nov 16 (trifold + 3-min pitch) · Final Wed Nov 18 (if top 8)
 
