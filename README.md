@@ -17,7 +17,7 @@ Public repo: https://github.com/faketut/remithome
 - [x] Brainstorm + pick (Nov 11) — see `docs/BRAINSTORM.md`
 - [x] Scaffold: Soroban contract source, Next.js app skeleton (mock mode), docs
 - [x] Contract compiles + unit tests pass (Nov 11: `stellar contract build` OK, wasm 7,322 bytes, 2/2 `cargo test` pass; 3 minimal fixes in `src/lib.rs`, interface unchanged)
-- [ ] Contract deploys to Stellar Testnet (contract ID: _TBD_)
+- [x] Contract deployed to Stellar Testnet — **contract ID: `CAQUKEVTBAPJKKN74IIL4M2KZHMQBGA5MYN4XQ3XUHGX552FA3CISKR2`** ([Explorer](https://stellar.expert/explorer/testnet/contract/CAQUKEVTBAPJKKN74IIL4M2KZHMQBGA5MYN4XQ3XUHGX552FA3CISKR2)), verified live Nov 11 (spec returns all 4 functions; `get_remittance(1)` traps as designed). See `scripts/DEPLOYMENT.md`.
 - [ ] App wired to testnet (sender → escrow → release → receipt, end to end)
 - [ ] Devpost project created + Showcase Form submitted — **due Fri Nov 13, 08:30 EST**
 - [ ] 1-minute demo video (real prototype on screen, not slides)

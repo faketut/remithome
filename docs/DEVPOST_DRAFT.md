@@ -6,7 +6,7 @@
 - **Repo:** https://github.com/faketut/remithome — public, pushed Nov 11 (commit 22a2207, verified remote HEAD matches).
 - **Live demo URL:** TBD (deploy app or record local demo; testnet mode needs contract ID).
 - **Demo video URL (YouTube/Loom, ≤1 min of prototype):** TBD — record per `DEMO_SCRIPT.md`.
-- **Stellar Testnet contract ID:** TBD — deploy per `scripts/deploy-testnet.sh`, paste ID + Explorer link.
+- **Stellar Testnet contract ID:** `CAQUKEVTBAPJKKN74IIL4M2KZHMQBGA5MYN4XQ3XUHGX552FA3CISKR2` — [Explorer](https://stellar.expert/explorer/testnet/contract/CAQUKEVTBAPJKKN74IIL4M2KZHMQBGA5MYN4XQ3XUHGX552FA3CISKR2) (deployed Nov 11, verified live: all 4 functions in spec).
 
 ## Inspiration
 
