@@ -128,12 +128,6 @@ async function simulateCall(
   return StellarSdk.scValToNative(sim.result.retval);
 }
 
-/** USDC the escrow contract currently holds (via the SAC `balance`). */
-async function contractUsdcBalance(): Promise<bigint> {
-  const bal = await simulateCall(USDC_SAC, "balance", [addr(CONTRACT_ID)]);
-  return bal as bigint;
-}
-
 export interface CreateResult {
   remittanceId: number;
   code: string;
@@ -145,6 +139,7 @@ export async function createRemittance(input: {
   rentUsd: number;
   schoolUsd: number;
   foodUsd: number;
+  expiryLedgers?: number;
 }): Promise<CreateResult> {
   if (!CONTRACT_ID || !USDC_SAC) throw new Error("Testnet not configured (CONTRACT_ID / USDC_SAC missing)");
   const sender = senderKp();
@@ -153,27 +148,29 @@ export async function createRemittance(input: {
   const code = newPickupCode();
   const hash = codeHash(code);
 
-  // Fund the escrow only for the shortfall: earlier failed attempts already
-  // left USDC in the contract (their fund transfers landed; only the status
-  // polling failed). The contract itself never checks funding — it just pays
-  // from its own balance — so topping up to `total` is enough.
-  const held = await contractUsdcBalance();
-  let fundTxHash = "";
-  if (held < total) {
-    const shortfall = total - held;
-    const fund = await invoke({
-      source: sender,
-      contractId: USDC_SAC,
-      method: "transfer",
-      args: [addr(sender.publicKey()), addr(CONTRACT_ID), i128(shortfall)],
-      signers: [sender],
-    });
-    fundTxHash = fund.hash;
-  }
+  // Fund the escrow with the FULL total, every time. Do NOT fund "only the
+  // shortfall" against the contract's balance: that balance includes funds
+  // already allocated to other remittances' locked envelopes, so a shortfall
+  // computation double-counts them and leaves the new remittance underfunded
+  // (found Nov 11: the contract hit 0 USDC while 300 USDC of envelopes were
+  // still outstanding, and a refund failed with Contract error #10).
+  // The contract itself never checks funding — it just pays from its own
+  // balance — so each create must bring its own money.
+  const fund = await invoke({
+    source: sender,
+    contractId: USDC_SAC,
+    method: "transfer",
+    args: [addr(sender.publicKey()), addr(CONTRACT_ID), i128(total)],
+    signers: [sender],
+  });
+  const fundTxHash = fund.hash;
 
-  // Create the remittance: envelopes bound to their payees, 14-day expiry.
+  // Create the remittance: envelopes bound to their payees.
+  // Default expiry ~14 days; a short expiry is allowed for the demo's
+  // expiry-refund shot (a genuinely expired envelope, never a faked clock).
   const latest = await rpc.getLatestLedger();
-  const expiry = BigInt(latest.sequence) + BigInt(241920); // ~14 days at ~5s/ledger
+  const expiryLedgers = input.expiryLedgers ?? 241920;
+  const expiry = BigInt(latest.sequence) + BigInt(expiryLedgers);
   const created = await invoke({
     source: sender,
     contractId: CONTRACT_ID,
@@ -281,4 +278,22 @@ export async function releaseEnvelope(input: {
 
 export function explorerTxUrl(hash: string): string {
   return `https://stellar.expert/explorer/testnet/tx/${hash}`;
+}
+
+// Refund one expired envelope back to the sender. The contract enforces
+// that the expiry has passed and the caller is the sender; a refund before
+// expiry traps on-chain.
+export async function refundEnvelope(input: {
+  remittanceId: number;
+  envelopeIdx: number;
+}): Promise<{ txHash: string }> {
+  const sender = senderKp();
+  const { hash } = await invoke({
+    source: sender,
+    contractId: CONTRACT_ID,
+    method: "refund_expired",
+    args: [u64(BigInt(input.remittanceId)), u32(input.envelopeIdx)],
+    signers: [sender],
+  });
+  return { txHash: hash };
 }

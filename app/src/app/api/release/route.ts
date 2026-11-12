@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
     const result = await releaseEnvelope({ remittanceId: id, envelopeIdx: idx, code });
     return NextResponse.json({ ...result, explorer: explorerTxUrl(result.txHash) });
   } catch (e) {
+    console.error("[POST /api/release]", e);
     const message = e instanceof Error ? e.message : String(e);
     return NextResponse.json({ error: message }, { status: 500 });
   }

@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 // remittance id + pickup code + tx hashes. Testnet demo only.
 export async function POST(req: NextRequest) {
   try {
-    const { rent, school, food } = await req.json();
+    const { rent, school, food, expiryLedgers } = await req.json();
     const amounts = [rent, school, food].map(Number);
     if (amounts.some((n) => !Number.isFinite(n) || n <= 0)) {
       return NextResponse.json({ error: "amounts must be positive numbers" }, { status: 400 });
@@ -21,7 +21,12 @@ export async function POST(req: NextRequest) {
     if (total > 250) {
       return NextResponse.json({ error: "demo sender holds 750 test USDC; keep the send under $250" }, { status: 400 });
     }
-    const result = await createRemittance({ rentUsd: amounts[0], schoolUsd: amounts[1], foodUsd: amounts[2] });
+    const result = await createRemittance({
+      rentUsd: amounts[0],
+      schoolUsd: amounts[1],
+      foodUsd: amounts[2],
+      ...(Number.isInteger(expiryLedgers) && expiryLedgers > 0 ? { expiryLedgers } : {}),
+    });
     return NextResponse.json({
       ...result,
       ...(result.fundTxHash ? { explorerFund: explorerTxUrl(result.fundTxHash) } : {}),

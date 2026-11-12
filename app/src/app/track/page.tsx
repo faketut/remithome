@@ -126,6 +126,32 @@ function TestnetTrack() {
     }
   }
 
+  async function refund(idx: number) {
+    if (id === null) return;
+    setBusy(idx);
+    setError("");
+    try {
+      const res = await fetch("/api/refund", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ remittanceId: id, envelopeIdx: idx }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "refund failed");
+      const saved = loadTestnet();
+      if (saved) {
+        saved.releases[idx] = data.txHash;
+        saveTestnet(saved);
+        setReleases({ ...saved.releases });
+      }
+      await refresh(id);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(null);
+    }
+  }
+
   if (id === null) {
     return (
       <div>
@@ -152,11 +178,21 @@ function TestnetTrack() {
           {releases[idx] && (
             <span> · Receipt: <a href={explorerTx(releases[idx])} target="_blank" rel="noreferrer">Stellar Explorer (testnet)</a></span>
           )}
+          {e.released && (
+            <div><button onClick={() => release(idx)} disabled={busy !== null}>Release again (contract will reject)</button></div>
+          )}
           {!e.released && !e.refunded && e.purpose !== "food" && (
-            <div><button onClick={() => release(idx)} disabled={busy !== null}>{busy === idx ? "Releasing on-chain…" : `Release to ${roleFor(e.payee)} (testnet)`}</button></div>
+            <div>
+              <button onClick={() => release(idx)} disabled={busy !== null}>{busy === idx ? "Releasing on-chain…" : `Release to ${roleFor(e.payee)} (testnet)`}</button>{" "}
+              <button onClick={() => refund(idx)} disabled={busy !== null}>Refund to sender (after expiry)</button>
+            </div>
           )}
           {!e.released && !e.refunded && e.purpose === "food" && (
-            <p>Cash pickup: recipient shows code <strong>{code || "••••••"}</strong> at the agent. See <a href="/agent">Agent pickup</a>.</p>
+            <p>Cash pickup: recipient shows code <strong>{code || "••••••"}</strong> at the agent. See <a href="/agent">Agent pickup</a>.<br />
+            <button onClick={() => refund(idx)} disabled={busy !== null}>Refund to sender (after expiry)</button></p>
+          )}
+          {e.refunded && (
+            <span> · Refunded to sender{releases[idx] && (<span>: <a href={explorerTx(releases[idx])} target="_blank" rel="noreferrer">Stellar Explorer (testnet)</a></span>)}</span>
           )}
         </div>
       ))}
