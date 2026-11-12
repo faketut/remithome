@@ -2,26 +2,57 @@
 import { useState } from "react";
 import { BENCHMARKS } from "@/lib/demo";
 import { saveRemittance, loadRemittance } from "@/lib/store";
+import { TESTNET, saveTestnet, explorerTx } from "@/lib/testnet";
 
 export default function SendPage() {
   const [rent, setRent] = useState(100);
   const [school, setSchool] = useState(60);
   const [food, setFood] = useState(40);
   const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [testnet, setTestnet] = useState<{ id: number; code: string; createTxHash: string } | null>(null);
   const total = rent + school + food;
   const fee = Math.round(total * 0.01 * 100) / 100;
 
-  function send() {
-    const r = loadRemittance();
-    r.envelopes = [
-      { ...r.envelopes[0], amountUsd: rent, amountNgn: rent * 1550, status: "locked" },
-      { ...r.envelopes[1], amountUsd: school, amountNgn: school * 1550, status: "locked" },
-      { ...r.envelopes[2], amountUsd: food, amountNgn: food * 1550, status: "locked" },
-    ];
-    r.amountUsd = total;
-    r.feeUsd = fee;
-    saveRemittance(r);
-    setSent(true);
+  async function send() {
+    if (!TESTNET) {
+      const r = loadRemittance();
+      r.envelopes = [
+        { ...r.envelopes[0], amountUsd: rent, amountNgn: rent * 1550, status: "locked" },
+        { ...r.envelopes[1], amountUsd: school, amountNgn: school * 1550, status: "locked" },
+        { ...r.envelopes[2], amountUsd: food, amountNgn: food * 1550, status: "locked" },
+      ];
+      r.amountUsd = total;
+      r.feeUsd = fee;
+      saveRemittance(r);
+      setSent(true);
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      const res = await fetch("/api/remittance", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ rent, school, food }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "create failed");
+      saveTestnet({
+        remittanceId: data.remittanceId,
+        code: data.code,
+        createTxHash: data.createTxHash,
+        fundTxHash: data.fundTxHash,
+        releases: {},
+      });
+      setTestnet({ id: data.remittanceId, code: data.code, createTxHash: data.createTxHash });
+      setSent(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -49,13 +80,21 @@ export default function SendPage() {
       </div>
 
       {!sent ? (
-        <button onClick={send}>Lock ${total} in escrow →</button>
+        <button onClick={send} disabled={busy}>{busy ? "Locking on testnet…" : `Lock $${total} in escrow →`}</button>
+      ) : testnet ? (
+        <div className="card">
+          <p><strong>Locked on Stellar Testnet.</strong> Remittance #{testnet.id} — the escrow contract holds ${total} USDC in three envelopes.</p>
+          <p>Pickup code for the food envelope: <strong>{testnet.code}</strong> — share it with Mama N. only.</p>
+          <p>Escrow tx: <a href={explorerTx(testnet.createTxHash)} target="_blank" rel="noreferrer">Stellar Explorer (testnet)</a></p>
+          <p><a href={`/track?id=${testnet.id}`}>Track the envelopes →</a></p>
+        </div>
       ) : (
         <div className="card">
           <p><strong>Locked.</strong> Pickup code for the food envelope: <strong>482913</strong> — share it with Mama N. only.</p>
           <p><a href="/track">Track the envelopes →</a></p>
         </div>
       )}
+      {error && <p style={{ color: "red" }}>{error}</p>}
     </div>
   );
 }

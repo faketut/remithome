@@ -18,6 +18,7 @@ Public repo: https://github.com/faketut/remithome
 - [x] Scaffold: Soroban contract source, Next.js app skeleton (mock mode), docs
 - [x] Contract compiles + unit tests pass (Nov 11: `stellar contract build` OK, wasm 7,322 bytes, 2/2 `cargo test` pass; 3 minimal fixes in `src/lib.rs`, interface unchanged)
 - [x] Contract deployed to Stellar Testnet — **contract ID: `CAQUKEVTBAPJKKN74IIL4M2KZHMQBGA5MYN4XQ3XUHGX552FA3CISKR2`** ([Explorer](https://stellar.expert/explorer/testnet/contract/CAQUKEVTBAPJKKN74IIL4M2KZHMQBGA5MYN4XQ3XUHGX552FA3CISKR2)), verified live Nov 11 (spec returns all 4 functions; `get_remittance(1)` traps as designed). See `scripts/DEPLOYMENT.md`.
+- [x] App wired to testnet end-to-end (Nov 11 ~23:30 UTC): sender → escrow → release → receipt through the app's own API routes, remittance #1 fully released on-chain (create `71321447…`, school `72f5ce9a…`, food `5cbe349a…`, rent `3b2c09b1…`); wrong-code and double-release attacks both rejected by the contract. Balances verified: school 60 / landlord 100 / agent 40 USDC. 200 USDC unallocated remains in the contract (covers the next create). See `scripts/DEPLOYMENT.md` for the gotchas (JS SDK v13 meta-parse bug, Friendbot `&asset=` delivers no USDC, payee trustlines required).
 - [ ] App wired to testnet (sender → escrow → release → receipt, end to end)
 - [ ] Devpost project created + Showcase Form submitted — **due Fri Nov 13, 08:30 EST**
 - [ ] 1-minute demo video (real prototype on screen, not slides)
